@@ -37,7 +37,7 @@
 ;; safe for "short" lists. Since we're dealing with file paths
 ;; this is safe enough.
 
-(defun sd/from-last (e l)
+(defun ox-attach-publish--from-last (e l)
   "Return the suffix of L starting from the rightmost instance of E."
   (let ((suffix (member e l)))
     (if suffix
@@ -45,7 +45,7 @@
 	    suffix)
       nil)))
 
-(defun sd/prefix-p (p l)
+(defun ox-attach-publish--prefix-p (p l)
   "Test whether a list P is a prefix of a list L."
   (cond ((null p)
 	 t)
@@ -56,61 +56,70 @@
 	(t
 	 nil)))
 
-
-;; ---------- Unique file names ----------
-
-(defun sd/f-uniq (stem ext)
-  "If a file STEM.EXT already exists, add a unique suffix to STEM
-to make a unique filename."
-  (let ((i 1)
-	(suffix "")
-	fn)
-    (while (progn
-	     (setq fn (format "%s%s.%s" stem suffix ext))
-	     (f-exists-p fn))
-      (setq suffix (format "-%d" i))
-      (setq i (+ i 1)))
-    fn))
+(defun ox-attach-publish--dedouble (l)
+  "Combine any repeated adjacent elements in L."
+  (cond ((null l)
+	 nil)
+	((null (cdr l))
+	 l)
+	((equal (car l) (cadr l))
+	 (cons (car l) (cdr (ox-attach-publish--dedouble (cdr l)))))
+	(t
+	 (cons (car l) (ox-attach-publish--dedouble (cdr l))))))
 
 
 ;; ---------- Filenames to file path lists ----------
 
-(defun sd/f-split-path (fn)
+(defun ox-attach-publish--split-path (fn)
   "Return filename FN as a list of elements.
 
 The leading element will be \"\" for an absolute filename."
-  (if (equal fn "")
-      nil
-    (s-split (f-path-separator) fn)))
+  (cond ((equal fn "")
+	 nil)
+	((equal fn "/")
+	 "")
+	(t
+	 (s-split (f-path-separator) fn))))
 
-(defun sd/f-join-path (p)
-  "Join a file path P into a filename.
+(defun ox-attach-publish--join-path (p)
+    "Join a file path P into a filename.
 
-If the path begins with \"\" the filename will be absolute."
-  (s-join (f-path-separator) p))
+If the path begins with \"\" the filename will be absolute. Trailing,
+repeated, and interior \"\" will all be ignored (and will not be created
+for paths derived from `ox-attach-publish--split-path')."
+    (cond ((null p)
+	   nil)
+	  ((equal p '(""))
+	   "/")
+	  (t
+	   (let* ((f-single (ox-attach-publish--dedouble p))
+		  (f-trailing (if (equal (car (last f-single)) "")
+				  (butlast f-single)
+				f-single)))
+	     (s-join (f-path-separator) f-trailing)))))
 
 
 ;; ---------- Prefix management ----------
 
-(defun sd/f-common-prefix-path (p1 p2)
+(defun ox-attach-publish--common-prefix (p1 p2)
   "Return the largest common prefix of two file paths."
   (cond ((or (null p1) (null p2))
 	 nil)
 	((equal (car p1) (car p2))
-	 (cons (car p1) (sd/f-common-prefix-path (cdr p1) (cdr p2))))
+	 (cons (car p1) (ox-attach-publish--common-prefix (cdr p1) (cdr p2))))
 	(t
 	 nil)))
 
-(defun sd/f-merge-common-suffix-prefix (p1 p2)
+(defun ox-attach-publish--common-suffix (p1 p2)
   "Return the path that concatenates P1 and P2, merging any suffix of P1 that is a prefix of P2."
   (let* ((f2 (car p2))
-	 (suffix1 (sd/from-last f2 p1)))
+	 (suffix1 (ox-attach-publish--from-last f2 p1)))
     (if (and suffix1
-	     (sd/prefix-p suffix1 p2))
+	     (ox-attach-publish--prefix-p suffix1 p2))
 	(append p1 (nthcdr (length suffix1) p2))
       (append p1 p2))))
 
-(defun sd/f-to-prefix-path (p cp)
+(defun ox-attach-publish--rel-prefix (p cp)
   "Return the path from the path P to the path CP.
 
 CP should be a prefix of P. The relative path will consist of zero
