@@ -1,4 +1,5 @@
 ;;; ox-attach-publish-frontend.el -- Attachment publishing frontend  -*- lexical-binding: t -*-
+
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
@@ -27,74 +28,7 @@
 ;;; Code:
 
 (require 'f)
-
-
-;; ---------- Project access ----------
-
-(defun org-attach-publish--project-name-or-plist (proj)
-  "Return the plist of PROJ, which may be the plist or a key into
-'org-publish-project-alist'."
-  (cond ((stringp proj)
-	 (let ((l (assoc proj org-publish-project-alist)))
-	   (if l
-	       (cdr l)
-	     (error "No project \"%s\" registered" proj))))
-	((listp proj)
-	 proj)
-	(t
-	 (error "Need a project name or plist"))))
-
-(defun org-attach-publish---pub-dir (proj)
-  "Return the publishing directory for attachments for project PROJ.
-
-This will look first for a property ':attachments-publishing-directory'. If
-not found, it will then look for ':attachments-project' and, if found, use
-this as a key into 'org-publish-project-alist' to retrieve a project and
-its publishing directory."
-  (let ((info (org-attach-publish--project-name-or-plist proj)))
-    (or (plist-get info :attachments-publishing-directory)
-	(let ((pub-name (plist-get info :attachments-project)))
-	  (if pub-name
-	      ;; got a project name, look it up
-	      (let ((pub-info (org-attach-publish--project-name-or-plist pub-name)))
-		;; got a project, extract its publishing directory
-		(plist-get pub-info :publishing-directory))
-
-	    (error "No publishing directory or project provided"))))))
-
-(defun org-attach-publish--base-dir (proj)
-  "Return the base directory for attachments from a project PROJ.
-
-This looks up the ':attachments-base-directory' property."
-  (let ((proj (org-attach-publish--project-name-or-plist proj)))
-    (or (plist-get info :attachments-base-directory)
-	(error "No attachments base directory provided"))))
-
-(defun org-attach-publish--file-within-project (proj fn)
-  "Convert a file name F within PROJ to an absolute file name.
-
-This looks up the project's ':base-directory' property."
-  (let* ((info (org-attach-publish--project-name-or-plist proj))
-	 (doc-dir (plist-get info :base-directory)))
-    (concat doc-dir (f-path-separator) f)))
-
-;; these next two feel wrong still...
-
-(defun org-attach-publish--common-pub-dir (p1 p2)
-  "Return the common root publication directory of two paths P1 and P2."
-  (sd/f-common-prefix-path p1 p2))
-
-(defun org-attach-publish--base-dir-rel (proj fn)
-  "Return a relative link to the attachments dirsctory of FN that is part
-of a project PROJ."
-  (let* ((info (org-attach-publish--project-name-or-plist proj))
-	 (fn (sd/f-split-path fn))
-	 (attachments-dir (sd/f-split-path (org-attach-publish--base-dir info)))
-	 (prefix (sd/f-common-prefix-path fn attachments-dir)))
-    (sd/f-join-path (append (sd/f-to-prefix-path fn prefix)
-			    (nthcdr (length prefix) attachments-dir)))))
-
-;; to be re-done...
+(require 'ox-attach-publish-f)
 
 
 ;; ---------- File name utilities ----------
@@ -172,7 +106,7 @@ in the location specified in PROJ's ':attachments-base-directory' property."
       (progn
 	(f-mkdir-full-path (f-dirname fn))
 	(let ((buf (create-file-buffer fn))
-	      (rel (org-attach-publish--base-dir-rel proj fn)))
+	      (rel (org-attach-publish--attachments-base-dir-rel proj fn)))
 	  (set-buffer buf)
 	  (set-visited-file-name fn t)  ; create-file-buffer doesn't set the visited file
 
@@ -188,5 +122,4 @@ in the location specified in PROJ's ':attachments-base-directory' property."
 
 
 (provide 'ox-attach-publish-frontend)
-
-;;; ox-attach-publish-frontend.el ends here
+;;; org-attach-publish-frontend.el ends here
