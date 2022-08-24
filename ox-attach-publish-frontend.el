@@ -24,6 +24,8 @@
 ;;; Commentary:
 
 ;; This is the user-facing front-end code for publishing attachments.
+;; All the functions in this file are intended for use in user code
+;; (and no functions in other files need be referenced).
 
 ;;; Code:
 
@@ -106,8 +108,16 @@ in the location specified in PROJ's ':attachments-base-directory' property."
       ;; file doesn't exist, create and populate it
       (progn
 	(f-mkdir-full-path (f-dirname fn))
-	(let ((buf (create-file-buffer fn))
-	      (rel (org-attach-publish--attachments-base-dir-rel proj fn)))
+	(let* ((buf (create-file-buffer fn))
+	       (info (org-attach-publish--project-name-or-plist proj))
+	       (doc-dir (org-attach-publish--split-path (f-dirname fn)))
+	       (attach-dir (org-attach-publish--split-path (org-attach-publish--attachments-base-dir info)))
+	       (prefix (org-attach-publish--common-prefix doc-dir
+							  attach-dir))
+	       (up (make-list (length (org-attach-publish--remove-prefix prefix doc-dir)) ".."))
+	       (down (org-attach-publish--remove-prefix prefix attach-dir))
+	       (rel (org-attach-publish--join-path (append up
+							   down))))
 	  (set-buffer buf)
 	  (set-visited-file-name fn t)  ; create-file-buffer doesn't set the visited file name
 
@@ -124,7 +134,7 @@ in the location specified in PROJ's ':attachments-base-directory' property."
 
 ;; ---------- Publishing backend and function ----------
 
-;; A derived HTML backend that installs the attachment: link filter
+;; Derive an HTML backend that installs the attachment: link filter
 (org-export-define-derived-backend 'html-with-attachments 'html
   :filters-alist '((:filter-parse-tree org-attach-publish--filter-parse-tree)))
 
@@ -136,7 +146,8 @@ in the location specified in PROJ's ':attachments-base-directory' property."
     ;; remove the default link-expansion function from the hook
     (remove-hook 'org-export-before-parsing-hook #'org-attach-expand-links)
 
-    ;; publish using the new backend, picking up the restricted hook function
+    ;; publish using the new backend, which will pick up the restricted
+    ;; hook function dynamically
     (org-publish-org-to 'html-with-attachments
 			fn
 			(concat (when (> (length org-html-extension) 0) ".")
