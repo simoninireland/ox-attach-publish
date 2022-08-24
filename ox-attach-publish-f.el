@@ -72,7 +72,7 @@
 ;; ---------- Filenames to file path lists ----------
 
 (defun org-attach-publish--deslash (p)
-  "Remove any inner slashes from file path P."
+  "Remove any \"\" from file path P."
   (cond ((null p)
 	 nil)
 	((equal (car p) "")
@@ -81,18 +81,39 @@
 	 (cons (car p) (org-attach-publish--deslash (cdr p))))))
 
 (defun org-attach-publish--inner (p)
-  "Remove any inner slashes from file path P."
+  "Remove any inner \"\" from file path P."
   (if (null p)
       nil
     (cons (car p) (org-attach-publish--deslash (cdr p)))))
 
 (defun org-attach-publish--outer (p)
-  "Ensure we have at most one leadign \"\" on a path."
-  (if (equal (car p) "")
-      (if (equal (cadr p) "")
-	  (org-attach-publish (cdr p))
-	p)
-    p))
+  "Ensure we have at most one leading \"\" on a path."
+  (cond ((null p)
+	 nil)
+	((equal (car p) "")
+	 (if (equal (cadr p) "")
+	     (org-attach-publish--outer (cdr p))
+	   p))
+	(t
+	 p)))
+
+(defun org-attach-publish--detrailing (p)
+  "Remove trailing \"\"s from P."
+  (cond ((null p)
+	 nil)
+	((equal (car (last p)) "")
+	 (org-attach-publish--detrailing (butlast p)))
+	(t
+	 p)))
+
+(defun org-attach-publish--normalise-path (p)
+  "Normalise the path P to remove any anomalies caused in construction.
+
+This removes repeated leading slashes, inner slashes, and trailing slashes."
+  (org-attach-publish--detrailing
+   (org-attach-publish--inner
+    (org-attach-publish--outer
+     p))))
 
 (defun org-attach-publish--split-path (fn)
   "Return filename FN as a list of elements.
@@ -103,10 +124,7 @@ The leading element will be \"\" for an absolute filename."
 	((equal fn "/")
 	 '(""))
 	(t
-	 (let ((p (org-attach-publish--dedouble (s-split (f-path-separator) fn))))
-	   (if (equal (car (last p)) "")
-	       (butlast p)
-	     p)))))
+	 (org-attach-publish--normalise-path (s-split (f-path-separator) fn)))))
 
 (defun org-attach-publish--join-path (p)
     "Join a file path P into a filename.
@@ -119,12 +137,8 @@ for paths derived from `org-attach-publish--split-path')."
 	  ((equal p '(""))
 	   "/")
 	  (t
-	   (let* ((f-single (org-attach-publish--outer p))
-		  (f-inner  (org-attach-publish--inner f-single))
-		  (f-trailing (if (equal (car (last f-inner)) "")
-				  (butlast f-inner)
-				f-inner)))
-	     (s-join (f-path-separator) f-trailing)))))
+	   (s-join (f-path-separator)
+		   (org-attach-publish--normalise-path p)))))
 
 
 ;; ---------- Prefix management ----------

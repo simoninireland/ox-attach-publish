@@ -35,175 +35,193 @@
 
 (ert-deftest from-last ()
   ;; first element
-  (should (equal (ox-attach-publish--from-last 1 '(1 2 3))
+  (should (equal (org-attach-publish--from-last 1 '(1 2 3))
 		 '(1 2 3)))
 
   ;; secont element
-  (should (equal (ox-attach-publish--from-last 2 '(1 2 3))
+  (should (equal (org-attach-publish--from-last 2 '(1 2 3))
 		 '(2 3)))
 
   ;; duplicate value
-  (should (equal (ox-attach-publish--from-last 2 '(1 2 3 4 2 7 8))
+  (should (equal (org-attach-publish--from-last 2 '(1 2 3 4 2 7 8))
 		 '(2 7 8)))
 
   ;; last element
-  (should (equal (ox-attach-publish--from-last 2 '(1 2))
+  (should (equal (org-attach-publish--from-last 2 '(1 2))
 		 '(2)))
 
   ;; not present
-  (should (null (ox-attach-publish--from-last 4 '(1 2 3))))
+  (should (null (org-attach-publish--from-last 4 '(1 2 3))))
 
   ;; empty list
-  (should (null (ox-attach-publish--from-last 1 nil)))
+  (should (null (org-attach-publish--from-last 1 nil)))
 
   ;; lists of lists
-  (should (equal (ox-attach-publish--from-last '(1 2) '(1 2 (1 2) 3))
+  (should (equal (org-attach-publish--from-last '(1 2) '(1 2 (1 2) 3))
 		 '((1 2) 3))))
 
 (ert-deftest prefix-p ()
   ;; ordinary prefix pass
-  (should (ox-attach-publish--prefix-p '(1 2) '(1 2 3)))
+  (should (org-attach-publish--prefix-p '(1 2) '(1 2 3)))
 
   ;; ordinary prefix fail
-  (should-not (ox-attach-publish--prefix-p '(1 2) '(2 3 4)))
+  (should-not (org-attach-publish--prefix-p '(1 2) '(2 3 4)))
 
   ;; empty prefix (defined as true for any list)
-  (should (ox-attach-publish--prefix-p nil '(1 2 3)))
+  (should (org-attach-publish--prefix-p nil '(1 2 3)))
 
   ;; prefix too long
-  (should-not (ox-attach-publish--prefix-p '(1 2 3) '(1 2)))
+  (should-not (org-attach-publish--prefix-p '(1 2 3) '(1 2)))
 
   ;; empty list
-  (should-not (ox-attach-publish--prefix-p '(1 2 3) nil))
+  (should-not (org-attach-publish--prefix-p '(1 2 3) nil))
 
   ;; lists of lists
-  (should (ox-attach-publish--prefix-p '(1 2 (1 2) 3) '(1 2 (1 2) 3 4 5))))
+  (should (org-attach-publish--prefix-p '(1 2 (1 2) 3) '(1 2 (1 2) 3 4 5))))
+
+(ert-deftest dedouble ()
+  ;; only adjacents
+  (should (equal (org-attach-publish--dedouble '(1 2 3 3 4 5 3))
+		 '(1 2 3 4 5 3)))
+
+  ;; triples are colapsed too
+  (should (equal (org-attach-publish--dedouble '(1 2 3 3 3 4))
+		 '(1 2 3 4)))
+
+  ;; trailing doubles
+  (should (equal (org-attach-publish--dedouble '(1 2 3 4 5 5))
+		 '(1 2 3 4 5)))
+
+  ;; trailing triples
+  (should (equal (org-attach-publish--dedouble '(1 2 3 3 3 ))
+		 '(1 2 3)))
+
+  ;; trailing and interior doubles
+  (should (equal (org-attach-publish--dedouble '(1 2 2 3 4 5 5))
+		 '(1 2 3 4 5)))
+
+  ;; no doubles
+  (should (equal (org-attach-publish--dedouble '(1 2 3 4 5))
+		 '(1 2 3 4 5)))
+
+  ;; all the same
+  (should (equal (org-attach-publish--dedouble '(1 1 1))
+		 '(1)))
+
+  ;; singleton
+  (should (equal (org-attach-publish--dedouble '(1))
+		 '(1)))
+
+  ;; empty list
+  (should-not (org-attach-publish--dedouble nil)))
 
 
 ;; ---------- Path splitting and joining ----------
 
 (ert-deftest split-path ()
   ;; absolute path
-  (should (equal (car (ox-attach-publish--split-path "/home/user"))
+  (should (equal (car (org-attach-publish--split-path "/home/user"))
 		 ""))
 
   ;; relative path
-  (should-not (equal (car (ox-attach-publish--split-path "home/user"))
+  (should-not (equal (car (org-attach-publish--split-path "home/user"))
 		     ""))
 
   ;; correct elements
-  (should (equal (ox-attach-publish--split-path "/home/user/dir/file")
+  (should (equal (org-attach-publish--split-path "/home/user/dir/file")
 		 '("" "home" "user" "dir" "file")))
 
   ;; no trailing slashes
-  (should-not (equal (last (ox-attach-publish--split-path "/home/user/"))
+  (should-not (equal (last (org-attach-publish--split-path "/home/user/"))
 		     ""))
-  (should (equal (ox-attach-publish--split-path "/home/user/")
+  (should (equal (org-attach-publish--split-path "/home/user/")
 		 '("" "home" "user")))
 
+  ;; no inner slashes
+  (should (equal (org-attach-publish--split-path "//home//user")
+		 '("" "home" "user")))
+
+  ;; repeated elements OK
+  (should (equal (org-attach-publish--split-path "../../user")
+		 '(".." ".." "user")))
+
   ;; root
-  (should (equal (ox-attach-publish--split-path "/")
-		 ""))
+  (should (equal (org-attach-publish--split-path "/")
+		 '("")))
 
   ;; empty path
-  (should-not (ox-attach-publish--split-path "")))
-
-(ert-deftest dedouble ()
-  ;; only adjacents
-  (should (equal (ox-attach-publish--dedouble '(1 2 3 3 4 5 3))
-		 '(1 2 3 4 5 3)))
-
-  ;; triples are colapsed too
-  (should (equal (ox-attach-publish--dedouble '(1 2 3 3 3 4))
-		 '(1 2 3 4)))
-
-  ;; trailing doubles
-  (should (equal (ox-attach-publish--dedouble '(1 2 3 4 5 5))
-		 '(1 2 3 4 5)))
-
-  ;; trailing triples
-  (should (equal (ox-attach-publish--dedouble '(1 2 3 3 3 ))
-		 '(1 2 3)))
-
-  ;; trailing and interior doubles
-  (should (equal (ox-attach-publish--dedouble '(1 2 2 3 4 5 5))
-		 '(1 2 3 4 5)))
-
-  ;; no doubles
-  (should (equal (ox-attach-publish--dedouble '(1 2 3 4 5))
-		 '(1 2 3 4 5)))
-
-  ;; all the same
-  (should (equal (ox-attach-publish--dedouble '(1 1 1))
-		 '(1)))
-
-  ;; singleton
-  (should (equal (ox-attach-publish--dedouble '(1))
-		 '(1)))
-
-  ;; empty list
-  (should-not (ox-attach-publish--dedouble nil)))
+  (should-not (org-attach-publish--split-path "")))
 
 (ert-deftest join-path ()
   ;; absolute path
-  (should (equal (ox-attach-publish--join-path '("" "home" "user"))
+  (should (equal (org-attach-publish--join-path '("" "home" "user"))
 		 "/home/user"))
 
   ;; relative path
-  (should (equal (ox-attach-publish--join-path '("home" "user"))
+  (should (equal (org-attach-publish--join-path '("home" "user"))
 		 "home/user"))
 
   ;; correct elements
-  (should (equal (ox-attach-publish--join-path '("" "home" "user" "dir" "file"))
+  (should (equal (org-attach-publish--join-path '("" "home" "user" "dir" "file"))
 		 "/home/user/dir/file"))
 
   ;; no trailing slashes (even though these shouldn't be created)
-  (should (equal (ox-attach-publish--join-path '("" "home" "user" ""))
+  (should (equal (org-attach-publish--join-path '("" "home" "user" ""))
 		 "/home/user"))
 
-  ;; no interior slashes (even though these shouldn't be created)
-  (should (equal (ox-attach-publish--join-path '("" "home" "" "user"))
+   ;; no interior slashes (even though these shouldn't be created)
+  (should (equal (org-attach-publish--join-path '("" "home" "" "user"))
 		 "/home/user"))
 
   ;; combine double slashes (even though these shouldn't be created)
-  (should (equal (ox-attach-publish--join-path '("" ""  "home" "user"))
+  (should (equal (org-attach-publish--join-path '("" ""  "home" "user"))
 		 "/home/user"))
 
   ;; root
-  (should (equal (ox-attach-publish--join-path '(""))
+  (should (equal (org-attach-publish--join-path '(""))
 		 "/"))
 
   ;; empty path
-  (should-not (ox-attach-publish--join-path nil)))
+  (should-not (org-attach-publish--join-path nil)))
 
 
 ;; ---------- Prefix management ----------
 
 (ert-deftest common-prefix-simple ()
-  (should (equal (ox-attach-publish--common-prefix (ox-attach-publish--split-path "/home/user/one")
-						   (ox-attach-publish--split-path "/home/user/two"))
-		 (ox-attach-publish--split-path "/home/user"))))
+  (should (equal (org-attach-publish--common-prefix (org-attach-publish--split-path "/home/user/one")
+						   (org-attach-publish--split-path "/home/user/two"))
+		 (org-attach-publish--split-path "/home/user"))))
 
 (ert-deftest common-prefix-one-longer ()
-  (should (equal (ox-attach-publish--common-prefix (ox-attach-publish--split-path "/home/user/one/two")
-						   (ox-attach-publish--split-path "/home/user/two"))
-		 (ox-attach-publish--split-path "/home/user"))))
+  (should (equal (org-attach-publish--common-prefix (org-attach-publish--split-path "/home/user/one/two")
+						   (org-attach-publish--split-path "/home/user/two"))
+		 (org-attach-publish--split-path "/home/user"))))
 
 (ert-deftest common-prefix-root ()
-  (should (equal (ox-attach-publish--common-prefix (ox-attach-publish--split-path "/home/user/one/")
-						   (ox-attach-publish--split-path "/user/two"))
-		 (ox-attach-publish--split-path "/"))))
+  (should (equal (org-attach-publish--common-prefix (org-attach-publish--split-path "/home/user/one/")
+						   (org-attach-publish--split-path "/user/two"))
+		 (org-attach-publish--split-path "/"))))
 
 (ert-deftest common-prefix-none ()
-  (should-not (ox-attach-publish--common-prefix (ox-attach-publish--split-path "home/user/one/")
-						(ox-attach-publish--split-path "user/two"))))
+  (should-not (org-attach-publish--common-prefix (org-attach-publish--split-path "home/user/one/")
+						(org-attach-publish--split-path "user/two"))))
 
 (ert-deftest common-suffix-simple ()
-  (should (equal (ox-attach-publish--common-suffix (ox-attach-publish--split-path "/home/user")
-						   (ox-attach-publish--split-path "user/two"))
-		 (ox-attach-publish--split-path "/home/user/two"))))
+  (should (equal (org-attach-publish--common-suffix (org-attach-publish--split-path "/home/user")
+						   (org-attach-publish--split-path "user/two"))
+		 (org-attach-publish--split-path "/home/user/two"))))
 
 (ert-deftest common-suffix-none ()
-  (should (equal (ox-attach-publish--common-suffix (ox-attach-publish--split-path "/home/user")
-						   (ox-attach-publish--split-path "two"))
-		 (ox-attach-publish--split-path "/home/user/two"))))
+  (should (equal (org-attach-publish--common-suffix (org-attach-publish--split-path "/home/user")
+						   (org-attach-publish--split-path "two"))
+		 (org-attach-publish--split-path "/home/user/two"))))
+
+(ert-deftest remove-prefix-yes ()
+  (should (equal (org-attach-publish--remove-prefix (org-attach-publish--split-path "/home/user")
+						    (org-attach-publish--split-path "/home/user/test"))
+		 (org-attach-publish--split-path "test"))))
+
+(ert-deftest remove-prefix-no ()
+  (should (equal (org-attach-publish--remove-prefix (org-attach-publish--split-path "/home/user")
+						    (org-attach-publish--split-path "/home/ttt/test"))
+		 (org-attach-publish--split-path "/home/ttt/test"))))
