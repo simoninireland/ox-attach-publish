@@ -1,4 +1,5 @@
 ;;; ox-attach-publish-machinery.el -- Core attachment machinery  -*- lexical-binding: t -*-
+
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
@@ -27,6 +28,7 @@
 
 ;;; Code:
 
+(require 'ox)
 (require 'ox-attach-publish-f)
 
 
@@ -163,12 +165,10 @@ The id is associated with the shallowest headline with the 'ID:' property."
   "Re-write attachment:-type links to file:-type links.
 
 The necessary information for this re-writing is extracted from
-the PROJ project, which contains all the properties included in the
+the INFO project plist, which contains all the properties included in the
 publishing project."
-  (princ "!!!")
   (org-element-map tree 'link
     #'(lambda (l)
-	(princ (org-element-property :type l))
 	(when (equal (org-element-property :type l) "attachment")
 	  ;; got an attachment link, re-write
 	  (let* ((doc (org-attach-publish--split-path (plist-get info :output-file)))

@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'f)
+(require 'ox-html)
 (require 'ox-attach-publish-f)
 
 
@@ -108,7 +109,7 @@ in the location specified in PROJ's ':attachments-base-directory' property."
 	(let ((buf (create-file-buffer fn))
 	      (rel (org-attach-publish--attachments-base-dir-rel proj fn)))
 	  (set-buffer buf)
-	  (set-visited-file-name fn t)  ; create-file-buffer doesn't set the visited file
+	  (set-visited-file-name fn t)  ; create-file-buffer doesn't set the visited file name
 
 	  ;; set the attachments directory for the capture
 	  (make-local-variable 'org-attach-id-dir)
@@ -119,6 +120,30 @@ in the location specified in PROJ's ':attachments-base-directory' property."
 	  (insert (format "# -*- org-attach-id-dir: \"%s\"; -*-\n" rel))
 
 	  buf)))))
+
+
+;; ---------- Publishing backend and function ----------
+
+;; A derived HTML backend that installs the attachment: link filter
+(org-export-define-derived-backend 'html-with-attachments 'html
+  :filters-alist '((:filter-parse-tree org-attach-publish--filter-parse-tree)))
+
+(defun org-attach-publish-to-html (info fn pub-dir)
+  "Publish FN as HTML with attachments to directory PUB-DIR using settings from the INFO plist."
+  (let* ((old-hooks org-export-before-parsing-hook)
+	 (org-export-before-parsing-hook old-hooks))
+
+    ;; remove the default link-expansion function from the hook
+    (remove-hook 'org-export-before-parsing-hook #'org-attach-expand-links)
+
+    ;; publish using the new backend, picking up the restricted hook function
+    (org-publish-org-to 'html-with-attachments
+			fn
+			(concat (when (> (length org-html-extension) 0) ".")
+				(or (plist-get info :html-extension)
+				    org-html-extension
+				    "html"))
+			info pub-dir)))
 
 
 (provide 'ox-attach-publish-frontend)
