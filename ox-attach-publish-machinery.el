@@ -151,11 +151,17 @@ The id is associated with the shallowest headline with the 'ID:' property."
 	    (org-attach-publish--element-id p)
 	    nil))))
 
-(defun org-attach-publish--element-id-dir (e)
-  "Return the attachment directory associated with element E."
+(defun org-attach-publish--element-id-dir (e info)
+  "Return the attachment directory associated with element E in project INFO.
+
+The directory is returned as a path list relative to the project's attachment
+publishing directory"
   (let ((id (org-attach-publish--element-id e)))
     (if id
-	(org-attach-dir-from-id id)
+	(let* ((org-attach-id-dir (org-attach-publish--attachments-pub-dir info))
+	       (dir (org-attach-dir-from-id id)))
+	  (org-attach-publish--remove-prefix (org-attach-publish--split-path org-attach-id-dir)
+					     (org-attach-publish--split-path dir)))
       (error "No ID property for attachments"))))
 
 
@@ -177,11 +183,14 @@ publishing project."
 		 (attach-publishing-dir (org-attach-publish--split-path (org-attach-publish--attachments-pub-dir info)))
 		 (prefix (org-attach-publish--common-prefix doc-publishing-dir
 							    attach-publishing-dir))
-		 (up (make-list (length (org-attach-publish--remove-prefix prefix doc)) ".."))
+		 (attach-subdir (org-attach-publish--element-id-dir l info))
+		 (up (make-list (- (length (org-attach-publish--remove-prefix prefix doc)) 1) ".."))
 		 (down (org-attach-publish--remove-prefix prefix attach-publishing-dir))
 		 (rel (org-attach-publish--join-path (append up
 							     down
+							     attach-subdir
 							     attach))))
+	    (princ up)
 	    (org-element-put-property l :type "file")
 	    (org-element-put-property l :path rel)))))
   tree)
