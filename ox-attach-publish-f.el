@@ -86,6 +86,14 @@
       nil
     (cons (car p) (org-attach-publish--deslash (cdr p)))))
 
+(defun org-attach-publish--outer (p)
+  "Ensure we have at most one leadign \"\" on a path."
+  (if (equal (car p) "")
+      (if (equal (cadr p) "")
+	  (org-attach-publish (cdr p))
+	p)
+    p))
+
 (defun org-attach-publish--split-path (fn)
   "Return filename FN as a list of elements.
 
@@ -111,7 +119,7 @@ for paths derived from `org-attach-publish--split-path')."
 	  ((equal p '(""))
 	   "/")
 	  (t
-	   (let* ((f-single (org-attach-publish--dedouble p))
+	   (let* ((f-single (org-attach-publish--outer p))
 		  (f-inner  (org-attach-publish--inner f-single))
 		  (f-trailing (if (equal (car (last f-inner)) "")
 				  (butlast f-inner)
