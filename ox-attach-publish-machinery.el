@@ -120,24 +120,6 @@ This looks up the project's ':base-directory' property."
 	    (f-path-separator)
 	    fn)))
 
-;; these next two feel wrong still...
-
-(defun org-attach-publish--common-pub-dir (p1 p2)
-  "Return the common root publication directory of two paths P1 and P2."
-  (org-attach-publish--common-prefix p1 p2))
-
-(defun org-attach-publish--base-dir-rel (proj fn)
-  "Return a relative link to the attachments dirsctory of FN that is part
-of a project PROJ."
-  (let* ((info (org-attach-publish--project-name-or-plist proj))
-	 (fn (org-attach-publish--split-path fn))
-	 (attachments-dir (org-attach-publish--split-path (org-attach-publish--base-dir info)))
-	 (prefix (org-attach-publish--common-prefix fn attachments-dir)))
-    (org-attach-publish--join-path (append (org-attach-publish--rel-prefix fn prefix)
-					  (nthcdr (length prefix) attachments-dir)))))
-
-;; to be re-done...
-
 
 ;; ---------- Extracting information from org parse trees ----------
 
