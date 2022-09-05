@@ -35,6 +35,14 @@ INIT_TESTS = test/init.el
 EMACS = emacs
 CASK = cask
 
+.PHONY: init
+init:
+	$(CASK) init
+
 .PHONY: test
 test:
 	${CASK} exec ${EMACS} -Q -batch -L "." -l ${INIT_TESTS} -l "test/test-f.el" --eval "(let ((ert-quiet t)) (ert-run-tests-batch-and-exit))"
+
+.PHONY: lint
+lint:
+	$(CASK) exec $(EMACS) -Q -batch -L "." --eval "(progn (require 'package-lint)(package-lint-batch-and-exit))"
