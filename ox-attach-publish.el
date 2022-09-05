@@ -1,4 +1,4 @@
-;;; ox-attach-publish.el -- Publish files attached to org documents  -*- lexical-binding: t -*-
+;;; ox-attach-publish.el -- Publish files attached to org documents -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2022 Simon Dobson <simoninireland@gmail.com>
 
@@ -7,6 +7,7 @@
 ;; Version: 0.1.1
 ;; Keywords: hypermedia, attachments
 ;; Homepage: https://github.com/simoninireland/ox-attach-publish
+;; Package-Requires: ((emacs "27.2")(org "8.0"))
 
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -57,8 +58,7 @@
 (defcustom org-attach-publish-slug "post"
   "Default slug used for new posts."
   :group 'org-attach-publish
-  :type 'string
-  )
+  :type 'string)
 
 
 ;; ---------- Elements ----------
@@ -66,14 +66,6 @@
 (require 'ox-attach-publish-machinery)
 (require 'ox-attach-publish-frontend)
 
-
-;; ---------- Installation ----------
-
-(add-to-list 'org-export-filter-parse-tree-functions
-	     #'org-attach-publish--filter-parse-tree)
-
-
-(setq org-export-filter-parse-tree-functions nil)
 
 (provide 'ox-attach-publish)
 ;;; ox-attach-publish.el ends here
