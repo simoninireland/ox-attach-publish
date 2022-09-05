@@ -1,10 +1,12 @@
-;;; ox-attach-publish-machinery.el -- Core attachment machinery  -*- lexical-binding: t -*-
+;;; ox-attach-publish-machinery.el --- Backend machinery -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
 ;; Keywords: hypermedia, attachments
+;; Homepage: https://github.com/simoninireland/ox-attach-publish
+;; Package-Requires: ((emacs "27.2")(org "8.0"))
 
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -81,7 +83,7 @@ published project in order for the files to be accessible."
 		      (f-path-separator)
 		      attachments-base-subdirectory)
 	    attachments-publishing-directory))
-      (or attachments-publishing-subdirectory
+      (or attachments-publishing-directory
 	  (error "No publishing project or directory given for publishing attachments")))))
 
 (defun org-attach-publish--attachments-base-dir (proj)
@@ -150,9 +152,9 @@ publishing directory"
 ;; ---------- Parse tree filter ----------
 
 (defun org-attach-publish--filter-parse-tree (tree backend info)
-  "Re-write attachment:-type links to file:-type links.
+  "Re-write attachment:-type links to file:-type links within TREE.
 
-The necessary information for this re-writing is extracted from
+The re-writing uses BACKEND. The necessary information is extracted from
 the INFO project plist, which contains all the properties included in the
 publishing project."
   (org-element-map tree 'link
@@ -166,7 +168,7 @@ publishing project."
 		 (prefix (org-attach-publish--common-prefix doc-publishing-dir
 							    attach-publishing-dir))
 		 (attach-subdir (org-attach-publish--element-id-dir l info))
-		 (up (make-list (- (length (org-attach-publish--remove-prefix prefix doc)) 1) ".."))
+		 (up (make-list (1- (length (org-attach-publish--remove-prefix prefix doc))) ".."))
 		 (down (org-attach-publish--remove-prefix prefix attach-publishing-dir))
 		 (rel (org-attach-publish--join-path (append up
 							     down

@@ -5,6 +5,8 @@
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
 ;; Keywords: hypermedia, attachments
+;; Homepage: https://github.com/simoninireland/ox-attach-publish
+;; Package-Requires: ((emacs "27.2")(org "8.0"))
 
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -87,7 +89,7 @@
     (cons (car p) (org-attach-publish--deslash (cdr p)))))
 
 (defun org-attach-publish--outer (p)
-  "Ensure we have at most one leading \"\" on a path."
+  "Ensure we have at most one leading \"\" on path P."
   (cond ((null p)
 	 nil)
 	((equal (car p) "")
@@ -144,7 +146,7 @@ for paths derived from `org-attach-publish--split-path')."
 ;; ---------- Prefix management ----------
 
 (defun org-attach-publish--common-prefix (p1 p2)
-  "Return the largest common prefix of two file paths."
+  "Return the largest common prefix of P1 and P2."
   (cond ((or (null p1) (null p2))
 	 nil)
 	((equal (car p1) (car p2))
@@ -172,4 +174,4 @@ a relative filename, which makes relative link construction easier."
 
 
 (provide 'ox-attach-publish-f)
-;;; org-attach-publish-f.el ends here
+;;; ox-attach-publish-f.el ends here

@@ -1,10 +1,12 @@
-;;; ox-attach-publish-frontend.el -- Attachment publishing frontend  -*- lexical-binding: t -*-
+;;; ox-attach-publish-frontend.el -- Attachment publishing frontend -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
 ;; Keywords: hypermedia, attachments
+;; Homepage: https://github.com/simoninireland/ox-attach-publish
+;; Package-Requires: ((emacs "27.2")(org "8.0"))
 
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -139,7 +141,10 @@ in the location specified in PROJ's ':attachments-base-directory' property."
   :filters-alist '((:filter-parse-tree org-attach-publish--filter-parse-tree)))
 
 (defun org-attach-publish-to-html (info fn pub-dir)
-  "Publish FN as HTML with attachments to directory PUB-DIR using settings from the INFO plist."
+  "Publish FN as HTML with attachments to directory PUB-DIR using settings
+from the INFO plist.
+
+Returns the published file name."
   (let* ((old-hooks org-export-before-parsing-hook)
 	 (org-export-before-parsing-hook old-hooks))
 
@@ -147,7 +152,7 @@ in the location specified in PROJ's ':attachments-base-directory' property."
     (remove-hook 'org-export-before-parsing-hook #'org-attach-expand-links)
 
     ;; publish using the new backend, which will pick up the restricted
-    ;; hook function dynamically
+    ;; hook function using dynamic binding
     (org-publish-org-to 'html-with-attachments
 			fn
 			(concat (when (> (length org-html-extension) 0) ".")
@@ -158,4 +163,4 @@ in the location specified in PROJ's ':attachments-base-directory' property."
 
 
 (provide 'ox-attach-publish-frontend)
-;;; org-attach-publish-frontend.el ends here
+;;; ox-attach-publish-frontend.el ends here
