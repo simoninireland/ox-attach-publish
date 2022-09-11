@@ -1,0 +1,208 @@
+#+title: ox-attach-publish
+
+* ~ox-attach-publish~: Publish files attached to org notes
+
+ One of the best things about [[https://orgmode.org/][Org mode]] is the way it implements
+ complicated features in plain text. One of my favourite and
+ most-used features are [[info:org#Attachments][attachments]], whereby an org document can
+ have other files associated with it and can reference them with
+ links. I use this all the time for keeping screenshots and PDFs
+ alongside my notes.
+
+ I also want to use org to manage my web site, but unfortunately
+ attachments don't play well with org's excellent publishing
+ framework. The [[info:org#Publishing links][info page for publishing links]] suggests setting
+ up well-known and parallel directory hierarchies for constructing
+ relative links. I wanted something more in the spirit of org, where
+ documents could be self-contained and publish all their elements.
+
+** What the package does
+
+   ~ox-attach-publish~ is a small package that publishes attachments
+   along with org documents. It works by customising the attachment
+   machinery to place attachments in a publishable place, and by
+   filtering the exported document to convert attachment: links into
+   file: links. This exports notes with attachments in a
+   self-contained manner, just like other link types.
+
+** Installation
+
+   Download ~ox-attach-publish~ from MELPA as usual. Then add the
+   following to your ~.emacs.el~:
+
+   #+begin_src elisp
+     (require 'ox-attach-publish)
+   #+end_src
+
+   and you're good to go.
+
+** Getting started
+
+   Suppose we have a simple blog set up like this:
+
+   #+begin_src elisp
+     (setq org-publish-project-alist
+	   '(("content"
+	      :base-directory "~/org"
+	      :publishing-directory "~/www"
+	      :base-extension "org"
+	      :recursive t
+	      :publishing-function org-html-publish-to-html)
+	     ("static"
+	      :base-directory "~/static"
+	      :publishing-directory "~/www/static"
+	      :base-extension "png\\|jpg\\|pdf"
+	      :recursive t
+	      :publishing-function org-publish-attachment)
+	     ("blog"
+	      :components ("content" "static")))
+   #+end_src
+
+   Notice there are two "components" to the main "blog" project:
+   "content" containing the org notes we want to publish; and
+   "static" containing non-org files. The notes are published using
+   the ~org-html-publish-to-html~ function, which transcodes the org
+   markup to HTML. The static content is simply copied with no
+   transcoding using the ~org-publish-attachment~ function -- which,
+   despite its name, has nothing to do with org's attachment
+   machinery.
+
+   To publish attachments on the org notes, we add some extra
+   options to the "content" project:
+
+   #+begin_src elisp
+     (setq org-publish-project-alist
+	   '(("content"
+	      :base-directory "~/org"
+	      :publishing-directory "~/www"
+	      :base-extension "org"
+	      :recursive t
+	      :publishing-function org-attach-publish-to-html
+	      :attachments-base-directory "~/static/attachments"
+	     ...))
+   #+end_src
+
+   ~:publishing-function~ changes from ~org-html-publish-to-html~ to
+   ~org-attach-publish-to-html~ to apply the attachment-publishing
+   functionality to this project. ~:attachments-base-directory~
+   names the directory where the attachments will be stored. We then
+   need to publish these attachments, so need to make sure that they
+   land within the scope of some published project -- in this case
+   the "static" project.
+
+   Alternatively, we can specify the project publishing the
+   attachments directly by giving an ~:attachments-project~ property
+   and pick up its base directory:
+
+   #+begin_src elisp
+     (setq org-publish-project-alist
+	   '(("content"
+	      :base-directory "~/org"
+	      :publishing-directory "~/www"
+	      :base-extension "org"
+	      :recursive t
+	      :publishing-function org-attach-publish-to-html
+	      :attachments-project "static"
+	     ...))
+   #+end_src
+
+   This will cause attachments to land in the base directory of the
+   "static" project. This might clutter things up, so if you want
+   to be careful about your URL namespaces you can combine the two
+   approaches, specifying a publishing project with
+   ~:attachments-project~ and also a directory within that project's
+   base directory with ~:attachments-base-directory~:
+
+   #+begin_src elisp
+     (setq org-publish-project-alist
+	   '(("content"
+	      :base-directory "~/org"
+	      :publishing-directory "~/www"
+	      :base-extension "org"
+	      :recursive t
+	      :publishing-function org-attach-publish-to-html
+	      :attachments-project "static"
+	      :attachments-base-directory "attachments"
+	     ...))
+   #+end_src
+
+   Attachments will now land in the "attachments" sub-directory of
+   the "static" project.
+
+   There's one last thing we need to do, which is to make sure that,
+   when we create a note, any files we attach to it land in the
+   correct place. The function ~org-attach-publish-create-note~
+   creates a new note within a particular publishing project and
+   sets the attachment directory locally to that specified by the
+   project [fn:header-comment]. All filenames are expressed relative
+   to the project's base directory, not as absolute paths.
+
+** Capturing
+
+   You can call ~org-attach-publish-create-note~ interactively, but
+   it's probably more convenient to use org's capture mechanism.
+   That way you can either write content from scratch, or capture a
+   region of text from elsewhere in Emacs. ~ox-attach-publish~
+   includes a couple of helper functions to make this easier.
+
+   To use the capture mechanism we just need to define a capture
+   template and connect the relevant functions. There are several
+   ways to do this: the easiest is probably to define two functions,
+   one that creates a buffer for the content and one that populates
+   it initially. For example:
+
+   #+begin_src elisp
+     (defun sd/blog-page-file ()
+       (let ((page (read-string "Page: ")))
+	 (org-attach-publish-create-note "blog-content" page)))
+
+     (defun sd/blog-page ()
+       (let ((title (read-string "Page title: ")))
+	 (format "#+title: %s\n\n* %s\n\n%%i\n%%?" title title)))
+
+     (add-to-list 'org-capture-templates
+		  '("p" "Blog page"
+		    plain
+		    (function sd/blog-page-file)
+		    (function sd/blog-page)
+		    :unnarrowed t
+		    :jump-to-captured t))
+   #+end_src
+
+   The first function, ~sd/blog-page-file~, reads a page filename and
+   calls ~org-attach-publish-create-note~ which creates the org note
+   ready to be populated. Of course you can construct the filename
+   however you want: many blogs would want to create a date tree for
+   dated posts.
+
+   The second function, ~sd/blog-page~, asks for a page title and
+   returns the post's initial content -- in this case the title and
+   any text in the region captured -- and then places the cursor at
+   the end. (The double-% signs are escaped single-% signs used in
+   the definition of org capture templates. See [[info:org#Template expansion][Template expansion]]
+   in the org manual.)
+
+   Now we use these functions in a capture template:
+
+   #+begin_src elisp
+     (add-to-list 'org-capture-templates
+		  '("b" "Blog page"
+		    plain
+		    (function sd/blog-page-file)
+		    (function sd/blog-page)
+		    :unnarrowed t
+		    :jump-to-captured t))
+   #+end_src
+
+   This style of template is described in the [[info:org#Template elements][Template elements]]
+   section of the org manual. It's unusual in using functions to
+   generate /both/ the file /and/ the template. (You might prefer to
+   use an explicit template instead of a specially-written function
+   like ~sd/blog-page~.)
+
+** Footnotes
+
+[fn:header-comment] To make sure that the attachments still work
+     if you re-visit the file later ~org-attach-publish-create-note~
+     also adds a header comment to every note to set the
+     ~org-attach-id-dir~ variable to point to the right place.
