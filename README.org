@@ -1,5 +1,3 @@
-#+title: ox-attach-publish
-
 * ~ox-attach-publish~: Publish files attached to org notes
 
  One of the best things about [[https://orgmode.org/][Org mode]] is the way it implements
