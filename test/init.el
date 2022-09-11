@@ -25,33 +25,15 @@
 
 ;; Test list and file utilities.
 ;; Uses some ideas taken from https://github.com/jkitchin/org-ref/blob/master/test/init.el
-;; to create a clean environment, and a macro to define a local set of
-;; publishing projects to allow the tests to be run ionside a development
-;; Emacs without screwing-up the main settings (hurray for dynamic scoping!).
+;; using a macro to define a local set o publishing projects to allow the tests to be
+;; run inside a development Emacs without screwing-up the main settings (hurray for
+;; dynamic scoping!).
+;;
+;; Assumes that cask or similar has been used to create an approproate virtual environment.
 
 ;;; Code:
 
-;; ---------- Set up clean package directory ----------
-
-(setq user-emacs-directory "./elpa-for-ox-attach-publish")
-(require 'package)
-
-(setq package-archives
-      '(("melpa" . "http://melpa.org/packages/")))
-
-(package-initialize)
-(package-refresh-contents)
-
-
-;; ---------- Install dependencies ----------
-
-(dolist (package (list 'org 's 'f))
-  (unless (package-installed-p package)
-    (message "installing %s" package)
-    (package-install package)))
-
-
-;;---------- Test publishing projects ----------
+(require 'ox-attach-publish)
 
 (defmacro with-test-projects (&rest body)
   "Run BODY forms in a local context with publishing projects and their directories.
@@ -90,6 +72,3 @@ are guaranteed to exist, and guaranteed to be empty, when BODY is run."
 	     ,@body)
 	 (dolist (dir (list content-dir static-dir publish-dir))
 	   (delete-directory dir t))))))
-
-
-(require 'ox-attach-publish)
