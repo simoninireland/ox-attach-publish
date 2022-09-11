@@ -4,7 +4,7 @@
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
-;; Keywords: hypermedia, attachments
+;; Keywords: org, Hypermedia, attachments
 ;; Homepage: https://github.com/simoninireland/ox-attach-publish
 ;; Package-Requires: ((emacs "27.2")(org "8.0"))
 
@@ -34,59 +34,6 @@
 (require 'f)
 (require 'ox-html)
 (require 'ox-attach-publish-f)
-
-
-;; ---------- File name utilities ----------
-
-(defun org-attach-publish--uniquify (fn dir)
-  "Create a unique version of FN within DIR.
-
-This adds a number suffix to the filename before any extension to disambiguate.
-The intended use is that FN is a file within a project whose base directory
-is DIR."
-  (let* ((stem (f-no-ext fn))
-	 (ext (f-ext fn))
-	 (i 1)
-	 (suffix "")
-	 (ufn stem))
-    (while (progn
-	     (setq fn (format "%s%s%s%s.%s" dir (f-path-separator) stem suffix ext))
-	     (f-exists-p fn))
-      (setq suffix (format "-%d" i))
-      (setq i (+ i 1)))
-    (format "%s%s.%s" ufn suffix ext)))
-
-(defun org-attach-publish-uniquify (proj fn)
-  "Make FN unique within project PROJ.
-
-FN is expressed relative to the base directory of PROJ."
-  (let* ((info (org-attach-publish--project-name-or-plist proj))
-	 (doc-dir (plist-get info :base-directory)))
-    (org-attach-publish--uniquify fn doc-dir)))
-
-(defun org-attach-publish-orgify (fn)
-  "Ensure FN has a .org extension."
-  (format "%s.org" (f-no-ext fn)))
-
-(defun org-attach-publish-create-datetree-file-name (proj &optional slug)
-  "Create a filename for a post in PROJ using the year/month/date tree form.
-
-If SLUG is given, it is used as the basis for the filename. The filename
-will be unique within the leaf of the tree."
-  (let* ((info (org-attach-publish--project-name-or-plist proj))
-	 (doc-dir (plist-get info :base-directory))
-	 (today (decode-time))
-	 (year (decoded-time-year today))
-	 (month (decoded-time-month today))
-	 (day (decoded-time-day today))
-	 (fn (format "%d/%02d/%02d/%s.org"
-		     year month day
-		     (if slug
-			 (if (equal slug "")
-			     org-attach-publish-slug
-			   slug)
-		       org-attach-publish-slug))))
-    (org-attach-publish--uniquify fn doc-dir)))
 
 
 ;; ---------- Creating notes with attachments ----------
@@ -141,8 +88,7 @@ in the location specified in PROJ's ':attachments-base-directory' property."
   :filters-alist '((:filter-parse-tree org-attach-publish--filter-parse-tree)))
 
 (defun org-attach-publish-to-html (info fn pub-dir)
-  "Publish FN as HTML with attachments to directory PUB-DIR using settings
-from the INFO plist.
+  "Publish FN as HTML with attachments to directory PUB-DIR using settings from the INFO plist.
 
 Returns the published file name."
   (let* ((old-hooks org-export-before-parsing-hook)
