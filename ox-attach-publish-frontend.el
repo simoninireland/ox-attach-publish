@@ -1,12 +1,12 @@
-;;; ox-attach-publish-frontend.el -- Attachment publishing frontend -*- lexical-binding: t -*-
+;;; ox-attach-publish-frontend.el --- Attachment publishing frontend -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
-;; Keywords: org, Hypermedia, attachments
+;; Keywords: Hypermedia, multimedia
 ;; Homepage: https://github.com/simoninireland/ox-attach-publish
-;; Package-Requires: ((emacs "27.2")(org "8.0"))
+;; Package-Requires: ((emacs "27.2") (org "8.0"))
 
 ;; This file is NOT part of GNU Emacs.
 ;;

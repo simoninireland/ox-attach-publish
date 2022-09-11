@@ -1,12 +1,12 @@
-;;; ox-attach-publish-machinery.el -- Backend machinery -*- lexical-binding: t; -*-
+;;; ox-attach-publish-machinery.el --- Backend machinery -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
-;; Keywords: org, hypermedia, attachments
+;; Keywords: hypermedia, multimedia
 ;; Homepage: https://github.com/simoninireland/ox-attach-publish
-;; Package-Requires: ((emacs "27.2")(org "8.0"))
+;; Package-Requires: ((emacs "27.2") (org "8.0"))
 
 ;; This file is NOT part of GNU Emacs.
 ;;
