@@ -1,10 +1,10 @@
-;;; ox-publish-attachmenmts-f.el -- File-handling utilities  -*- lexical-binding: t -*-
+;;; ox-publish-attachmenmts-f.el -- File-handling utilities -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
-;; Keywords: hypermedia, attachments
+;; Keywords: org, hypermedia, attachments
 ;; Homepage: https://github.com/simoninireland/ox-attach-publish
 ;; Package-Requires: ((emacs "27.2")(org "8.0"))
 

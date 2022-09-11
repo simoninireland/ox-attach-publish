@@ -1,10 +1,10 @@
-;;; ox-attach-publish-machinery.el --- Backend machinery -*- lexical-binding: t; -*-
+;;; ox-attach-publish-machinery.el -- Backend machinery -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2022 Free Software Foundation, Inc.
 
 ;; Author: Simon Dobson <simoninireland@gmail.com>
 ;; Maintainer: Simon Dobson <simoninireland@gmail.com>
-;; Keywords: hypermedia, attachments
+;; Keywords: org, hypermedia, attachments
 ;; Homepage: https://github.com/simoninireland/ox-attach-publish
 ;; Package-Requires: ((emacs "27.2")(org "8.0"))
 
@@ -113,7 +113,7 @@ store the attachments."
 	  (error "No publishing project or directory given for storing attachments")))))
 
 (defun org-attach-publish--file-within-project (proj fn)
-  "Convert a file name F within PROJ to an absolute file name.
+  "Convert a file name FN within PROJ to an absolute file name.
 
 This looks up the project's ':base-directory' property."
   (let* ((info (org-attach-publish--project-name-or-plist proj))
