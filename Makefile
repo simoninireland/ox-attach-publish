@@ -28,21 +28,45 @@ SOURCES_FILES = \
 
 # Unit tests
 SOURCES_TESTS =\
-	test/test-f.el
+	test/test-f.el \
+	test/test-machinery.el \
+	test/test-frontend.el
 INIT_TESTS = test/init.el
 
 # Tools
 EMACS = emacs
 CASK = cask
+RM = rm -fr
 
-.PHONY: init
-init:
-	$(CASK) init
+# Virtual environment
+VENV = .cask
+
+# Constructed tools
+RUN_EMACS = $(CASK) exec $(EMACS) -Q -batch -L "."
+
+# Top-level targets
+
+# Build virtual environment
+.PHONY: env
+env: $(VENV)
+
+$(VENV):
+	$(CASK) install
 
 .PHONY: test
-test:
-	${CASK} exec ${EMACS} -Q -batch -L "." -l ${INIT_TESTS} -l "test/test-f.el" --eval "(let ((ert-quiet t)) (ert-run-tests-batch-and-exit))"
+test: env
+	$(RUN_EMACS) \
+	-l $(INIT_TESTS) \
+	$(SOURCES_TESTS:%=-l %) \
+	--eval "(let ((ert-quiet t)) (ert-run-tests-batch-and-exit))"
 
 .PHONY: lint
-lint:
-	$(CASK) exec $(EMACS) -Q -batch -L "." --eval "(progn (require 'package-lint)(package-lint-batch-and-exit))"
+lint: env
+	$(RUN_EMACS) \
+	--eval "(progn (require 'package-lint)(package-lint-batch-and-exit))" \
+	$(SOURCES_FILES)
+
+# Clean up the build
+.PHONY: clean
+clean:
+	$(RM) $(VENV)
