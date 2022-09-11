@@ -46,26 +46,8 @@
 
 ;;; Code:
 
-;; ---------- Configuration ----------
-
-(defgroup org-attach-publish nil
-  "Options specific to exporting org note attachments."
-  :tag "Org Attach Publish"
-  :group 'org-publish
-  :version "24.4"
-  :package-version '(Org . "8.0"))
-
-(defcustom org-attach-publish-slug "post"
-  "Default slug used for new posts."
-  :group 'org-attach-publish
-  :type 'string)
-
-
-;; ---------- Elements ----------
-
 (require 'ox-attach-publish-machinery)
 (require 'ox-attach-publish-frontend)
-
 
 (provide 'ox-attach-publish)
 ;;; ox-attach-publish.el ends here
