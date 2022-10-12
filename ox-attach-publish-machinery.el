@@ -174,7 +174,6 @@ publishing project."
 							     down
 							     attach-subdir
 							     attach))))
-	    (princ up)
 	    (org-element-put-property l :type "file")
 	    (org-element-put-property l :path rel)))))
   tree)
