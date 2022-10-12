@@ -67,3 +67,16 @@
 
 
 ;; ---------- Relative links ----------
+
+;; ---------- Link re-writing ----------
+
+(ert-deftest rewrite-link ()
+  (with-test-projects
+   (let* ((fn (concat publish-dir "/a/b/c.html"))
+	  (attachment "ttt.gif")
+	  (uid-dir "12/345")
+	  (attachment-dir (concat publish-dir "/" attachments-subdir "/" uid-dir)))
+     (should (equal (org-attach-publish--rewrite-link (org-attach-publish--split-path fn)
+						      (org-attach-publish--split-path attachment)
+						      (org-attach-publish--split-path attachment-dir))
+		    (concat "../../" attachments-subdir "/" uid-dir "/" attachment))))))
