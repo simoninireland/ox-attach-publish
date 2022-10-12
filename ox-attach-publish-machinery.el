@@ -30,6 +30,8 @@
 
 ;;; Code:
 
+(require 's)
+(require 'org-attach)
 (require 'ox)
 (require 'ox-attach-publish-f)
 
@@ -142,11 +144,31 @@ The directory is returned as a path list relative to the project's attachment
 publishing directory"
   (let ((id (org-attach-publish--element-id e)))
     (if id
-	(let* ((org-attach-id-dir (org-attach-publish--attachments-pub-dir info))
-	       (dir (org-attach-dir-from-id id)))
-	  (org-attach-publish--remove-prefix (org-attach-publish--split-path org-attach-id-dir)
-					     (org-attach-publish--split-path dir)))
+	(let* ((base-dir (org-attach-publish--attachments-base-dir info))
+	       (dir (org-attach-dir-from-id id))
+	       (path (org-attach-publish--remove-prefix (org-attach-publish--split-path base-dir)
+							(org-attach-publish--split-path dir))))
+	  path)
       (error "No ID property for attachments"))))
+
+
+;; ---------- Attachment link re-writing ----------
+
+(defun org-attach-publish--rewrite-link (fn target target-dir)
+  "Re-write an attachment: link's target to a file: link.
+
+The link is contained in published file FN and refers to an
+attachment TARGET, which is published in directory TARGET-DIR.
+The resulting file: target is a relative path from FN to TARGET
+in TARGET-DIR. FN and TARGET-DIR must share a common prefix as
+filenames."
+  (let* ((prefix (org-attach-publish--common-prefix fn target-dir))
+	 (up (make-list (1- (length (org-attach-publish--remove-prefix prefix fn))) ".."))
+	 (down (org-attach-publish--remove-prefix prefix target-dir))
+	 (rel (org-attach-publish--join-path (append up
+						     down
+						     target))))
+    rel))
 
 
 ;; ---------- Parse tree filter ----------
@@ -161,19 +183,14 @@ publishing project."
     #'(lambda (l)
 	(when (equal (org-element-property :type l) "attachment")
 	  ;; got an attachment link, re-write
-	  (let* ((doc (org-attach-publish--split-path (plist-get info :output-file)))
-		 (doc-publishing-dir (org-attach-publish--split-path (plist-get info :publishing-directory)))
-		 (attach (org-attach-publish--split-path (org-element-property :path l)))
+	  (let* ((path (org-element-property :path l))
+		 (attach (org-attach-publish--split-path path))
+		 (doc (org-attach-publish--split-path (plist-get info :output-file)))
 		 (attach-publishing-dir (org-attach-publish--split-path (org-attach-publish--attachments-pub-dir info)))
-		 (prefix (org-attach-publish--common-prefix doc-publishing-dir
-							    attach-publishing-dir))
 		 (attach-subdir (org-attach-publish--element-id-dir l info))
-		 (up (make-list (1- (length (org-attach-publish--remove-prefix prefix doc))) ".."))
-		 (down (org-attach-publish--remove-prefix prefix attach-publishing-dir))
-		 (rel (org-attach-publish--join-path (append up
-							     down
-							     attach-subdir
-							     attach))))
+		 (rel (org-attach-publish--rewrite-link doc
+							attach
+							(append attach-publishing-dir attach-subdir))))
 	    (org-element-put-property l :type "file")
 	    (org-element-put-property l :path rel)))))
   tree)
