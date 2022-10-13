@@ -144,11 +144,12 @@ The directory is returned as a path list relative to the project's attachment
 publishing directory"
   (let ((id (org-attach-publish--element-id e)))
     (if id
-	(let* ((base-dir (org-attach-publish--attachments-base-dir info))
-	       (dir (org-attach-dir-from-id id))
-	       (path (org-attach-publish--remove-prefix (org-attach-publish--split-path base-dir)
-							(org-attach-publish--split-path dir))))
-	  path)
+	(let* ((base-dir (org-attach-publish--split-path (org-attach-publish--attachments-base-dir info)))
+	       (dir (org-attach-publish--split-path (org-attach-dir-from-id id))))
+	  (if (org-attach-publish--prefix-p base-dir dir)
+	      (let ((path (org-attach-publish--remove-prefix base-dir dir)))
+		path)
+	    (error (format "Attachments for id:%s aren't in the expected place" id))))
       (error "No ID property for attachments"))))
 
 
@@ -183,6 +184,7 @@ publishing project."
     #'(lambda (l)
 	(when (equal (org-element-property :type l) "attachment")
 	  ;; got an attachment link, re-write
+	  (princ "link ") (princ (org-element-property :path l)) (princ "\n")
 	  (let* ((path (org-element-property :path l))
 		 (attach (org-attach-publish--split-path path))
 		 (doc (org-attach-publish--split-path (plist-get info :output-file)))
