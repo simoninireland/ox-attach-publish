@@ -195,7 +195,8 @@ publishing project."
 							attach
 							(append attach-publishing-dir attach-subdir))))
 	    (org-element-put-property l :type "file")
-	    (org-element-put-property l :path rel)))))
+	    (org-element-put-property l :path rel))))
+    info)
   tree)
 
 
