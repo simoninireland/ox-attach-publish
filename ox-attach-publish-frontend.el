@@ -81,7 +81,7 @@ in the location specified in PROJ's ':attachments-base-directory' property."
 	  buf)))))
 
 
-;; ---------- Publishing backend and function ----------
+;; ---------- Publishing and export backend and functions ----------
 
 ;; Derive an HTML backend that installs the attachment: link filter
 (org-export-define-derived-backend 'html-with-attachments 'html
