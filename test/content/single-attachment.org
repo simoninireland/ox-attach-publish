@@ -1,0 +1,8 @@
+# -*- org-attach-id-dir: "../static/attachments" -*-
+
+* A file with a single attachment                                    :ATTACH:
+  :PROPERTIES:
+  :ID:       076d4815-7d2c-4973-884c-32ef8fe87b26
+  :END:
+
+  A link to [[attachment:one.txt][our attachment]].
