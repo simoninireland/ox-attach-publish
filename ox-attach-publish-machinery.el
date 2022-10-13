@@ -137,19 +137,19 @@ The id is associated with the shallowest headline with the 'ID:' property."
 	    (org-attach-publish--element-id p)
 	    nil))))
 
-(defun org-attach-publish--element-id-dir (e info)
-  "Return the attachment directory associated with element E in project INFO.
+(defun org-attach-publish--element-id-dir (e fn info)
+  "Return the attachment directory associated with element E of file FN in project INFO.
 
 The directory is returned as a path list relative to the project's attachment
 publishing directory"
   (let ((id (org-attach-publish--element-id e)))
     (if id
-	(let* ((base-dir (org-attach-publish--split-path (org-attach-publish--attachments-base-dir info)))
-	       (dir (org-attach-publish--split-path (org-attach-dir-from-id id))))
-	  (if (org-attach-publish--prefix-p base-dir dir)
-	      (let ((path (org-attach-publish--remove-prefix base-dir dir)))
-		path)
-	    (error (format "Attachments for id:%s aren't in the expected place" id))))
+	(let* ((prefix (org-attach-publish--split-path
+			(expand-file-name org-attach-id-dir
+					  (file-name-directory fn))))
+	       (path (org-attach-publish--split-path (org-attach-dir-from-id id)))
+	       (element (org-attach-publish--remove-prefix prefix path)))
+	  element)
       (error "No ID property for attachments"))))
 
 
@@ -184,12 +184,13 @@ publishing project."
     #'(lambda (l)
 	(when (equal (org-element-property :type l) "attachment")
 	  ;; got an attachment link, re-write
-	  (princ "link ") (princ (org-element-property :path l)) (princ "\n")
-	  (let* ((path (org-element-property :path l))
+	  (let* ((fn (buffer-file-name (current-buffer)))
+		 (path (org-element-property :path l))
 		 (attach (org-attach-publish--split-path path))
 		 (doc (org-attach-publish--split-path (plist-get info :output-file)))
-		 (attach-publishing-dir (org-attach-publish--split-path (org-attach-publish--attachments-pub-dir info)))
-		 (attach-subdir (org-attach-publish--element-id-dir l info))
+		 (attach-publishing-dir (org-attach-publish--split-path
+					 (org-attach-publish--attachments-pub-dir info)))
+		 (attach-subdir (org-attach-publish--element-id-dir l fn info))
 		 (rel (org-attach-publish--rewrite-link doc
 							attach
 							(append attach-publishing-dir attach-subdir))))
