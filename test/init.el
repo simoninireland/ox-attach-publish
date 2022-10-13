@@ -40,35 +40,34 @@
 
 The variables 'content-dir', 'static-dir', and 'publish-dir' correspond
 to the base directories for the \"content\" and \"static\" projects, and
-the the overall publishing directory, respectively. These directories
-are guaranteed to exist, and guaranteed to be empty, when BODY is run."
-  `(let* ((content-dir "./.content")
-	  (static-dir "./.static")
-	  (publish-dir "./.www")
+the the overall publishing directory, respectively. 'publish-dir' is
+guaranteed to exist and be empty when BODY runs."
+  `(let* ((content-dir (expand-file-name "test/content"))
+	  (static-dir (expand-file-name "test/static"))
+	  (publish-dir (expand-file-name "test/www"))
 	  (attachments-subdir "attachments")
 	  (content-publish-dir publish-dir)
-	  (static-publish-dir (concat publish-dir "/static")))
-     (dolist (dir (list content-dir static-dir publish-dir))
-       (when (f-directory-p dir)
-	 (delete-directory dir t))
-       (make-directory dir))
+	  (static-publish-dir publish-dir))
+     (when (f-directory-p publish-dir)
+       (delete-directory publish-dir t))
+     (make-directory publish-dir)
      (let ((org-publish-project-alist
 	    `(("content"
 	       :base-directory ,content-dir
 	       :publishing-directory ,content-publish-dir
 	       :base-extension "org"
 	       :recursive t
-	       :publishing-function org-html-publish-to-html
+	       ;; :publishing-function org-html-publish-to-html
+	       :publishing-function org-attach-publish-to-html
 	       :attachments-project "static"
 	       :attachments-base-directory ,attachments-subdir)
 	      ("static"
 	       :base-directory ,static-dir
 	       :publishing-directory ,static-publish-dir
-	       :base-extension "jpeg\\|jpg\\|png\\|svg\\|pdf"
+	       :base-extension "png\\|txt"
 	       :recursive t
 	       :publishing-function org-publish-attachment))))
        (unwind-protect
 	   (progn
 	     ,@body)
-	 (dolist (dir (list content-dir static-dir publish-dir))
-	   (delete-directory dir t))))))
+	 (delete-directory publish-dir t)))))
