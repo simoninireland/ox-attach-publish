@@ -66,4 +66,11 @@
 		  (concat static-publish-dir (f-path-separator) attachments-subdir)))))
 
 
-;; ---------- Tree re-writing ----------
+;; ---------- Publication----------
+
+(ert-deftest publish ()
+  (with-test-projects
+   (org-publish-project "content" t)
+   (org-publish-project "static" t)
+   (should (and (file-regular-p (concat publish-dir "/single-attachment.html"))
+		(file-directory-p (concat publish-dir "/" attachments-subdir))))))
