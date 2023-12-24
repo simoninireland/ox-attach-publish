@@ -135,7 +135,7 @@ The id is associated with the shallowest headline with the 'ID:' property."
       (let ((p (org-element-property :parent e)))
 	(if p
 	    (org-attach-publish--element-id p)
-	    nil))))
+	  nil))))
 
 (defun org-attach-publish--element-id-dir (e fn info)
   "Return the attachment directory associated with element E of file FN in project INFO.
@@ -174,6 +174,14 @@ filenames."
 
 ;; ---------- Parse tree filter ----------
 
+(defun org-attach-publish--update-link-path (l rel)
+  "Update the link element L to use path REL.
+
+This will re-write the link to be a file:-type link with
+its path being set to REL."
+  (org-element-put-property l :type "file")
+  (org-element-put-property l :path rel))
+
 (defun org-attach-publish--filter-parse-tree (tree backend info)
   "Re-write attachment:-type links to file:-type links within TREE.
 
@@ -194,8 +202,9 @@ publishing project."
 		 (rel (org-attach-publish--rewrite-link doc
 							attach
 							(append attach-publishing-dir attach-subdir))))
-	    (org-element-put-property l :type "file")
-	    (org-element-put-property l :path rel))))
+
+	    ;; update the link
+	    (org-attach-publish--update-link-path l rel))))
     info)
   tree)
 
