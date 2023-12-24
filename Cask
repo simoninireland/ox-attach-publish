@@ -10,6 +10,7 @@
 (depends-on "f")
 (depends-on "s")
 (depends-on "org" "8.0")
+(depemds-on "elsa")
 
 (development
   (depends-on "package-lint"))
